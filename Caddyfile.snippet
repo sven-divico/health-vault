@@ -1,0 +1,7 @@
+# Append to the host-native Caddyfile on the biztechbridge box, then `caddy reload`.
+# Mirrors the HFS-Demonstrator pattern: container binds 127.0.0.1:8082, Caddy proxies it.
+
+health-vault.biztechbridge.com {
+    encode gzip zstd
+    reverse_proxy 127.0.0.1:8082
+}

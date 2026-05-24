@@ -1,0 +1,20 @@
+services:
+  health-vault:
+    build: .
+    container_name: health-vault
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8082:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: file:/data/vault.sqlite
+      IMAGE_DIR: /data/images
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://health-vault.biztechbridge.com}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      SESSION_SECRET: ${SESSION_SECRET}
+      ADMIN_SECRET: ${ADMIN_SECRET}
+    volumes:
+      - ./data:/data
