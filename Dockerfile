@@ -25,6 +25,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/drizzle ./drizzle
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/better-sqlite3 ./node_modules/better-sqlite3
+# jpeg-js (zero-dependency, pure JS) is externalized from the bundle for image downsampling.
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/jpeg-js ./node_modules/jpeg-js
 USER nextjs
 EXPOSE 3000
 CMD ["node", "server.js"]

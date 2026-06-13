@@ -4,6 +4,7 @@ import { saveImage } from '@/lib/images';
 import { parseActivity } from '@/lib/measures/activity-parse';
 import { recordActivity, recordMood, recordWeight } from '@/lib/measures';
 import { interpretMealImage } from '@/lib/vision';
+import { recordVisionUsage } from '@/lib/vision/usage';
 import { downloadFile, getFile, sendMessage } from './api';
 import type { TelegramMessage, TelegramUpdate } from './types';
 
@@ -137,16 +138,23 @@ async function handlePhoto(userId: number, chatId: number, msg: TelegramMessage)
   const buf = await downloadFile(fileInfo.file_path);
   const ext = fileInfo.file_path.split('.').pop()?.toLowerCase() ?? 'jpg';
   const relPath = await saveImage(userId, buf, ext);
-  const interpretation = await interpretMealImage(buf);
-  createFoodPhotoEntry({
+  const { interpretation, usage } = await interpretMealImage(buf);
+  const entry = createFoodPhotoEntry({
     userId,
     imagePath: relPath,
     caption: msg.caption,
     interpretation,
   });
+  if (usage) recordVisionUsage(userId, entry.id, usage);
+
   const label = interpretation.dishName ?? '(unrecognised meal)';
   const kcal = interpretation.estimatedKcal != null ? ` ~${interpretation.estimatedKcal} kcal` : '';
-  await sendMessage(chatId, `✓ photo logged: <b>${escapeHtml(label)}</b>${kcal}`);
+  let extra = '';
+  if (usage && (process.env.VISION_SHOW_USAGE ?? 'true') !== 'false') {
+    const cost = (usage.costMicroUsd / 1e6).toFixed(4);
+    extra = `\n📷 ${usage.width}×${usage.height} · ${usage.inputTokens}/${usage.outputTokens} tok · ~$${cost} · ${usage.downsampleMs}ms`;
+  }
+  await sendMessage(chatId, `✓ photo logged: <b>${escapeHtml(label)}</b>${kcal}${extra}`);
 }
 
 async function safeReply(chatId: number, text: string) {

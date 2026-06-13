@@ -81,6 +81,30 @@ export const measurements = sqliteTable(
   }),
 );
 
+export const visionUsage = sqliteTable(
+  'vision_usage',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id').notNull().references(() => users.id),
+    foodEntryId: integer('food_entry_id').references(() => foodEntries.id),
+    loggedAt: integer('logged_at', { mode: 'timestamp' }).notNull(),
+    model: text('model').notNull(),
+    srcBytes: integer('src_bytes').notNull(),
+    sentBytes: integer('sent_bytes').notNull(),
+    width: integer('width').notNull(),
+    height: integer('height').notNull(),
+    inputTokens: integer('input_tokens').notNull(),
+    outputTokens: integer('output_tokens').notNull(),
+    costMicroUsd: integer('cost_micro_usd').notNull(),
+    visionConfidence: real('vision_confidence'),
+    downsampleMs: integer('downsample_ms').notNull(),
+  },
+  (t) => ({
+    userTimeIdx: index('vision_usage_user_time_idx').on(t.userId, t.loggedAt),
+  }),
+);
+
 export type User = typeof users.$inferSelect;
 export type FoodEntry = typeof foodEntries.$inferSelect;
 export type Measurement = typeof measurements.$inferSelect;
+export type VisionUsageRow = typeof visionUsage.$inferSelect;
