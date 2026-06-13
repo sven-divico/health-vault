@@ -1,6 +1,7 @@
 import { attemptLoginByCode, consumeInvite, getUserByTelegramId } from '@/lib/auth';
 import { createFoodPhotoEntry, createFoodTextEntry } from '@/lib/food';
 import { saveImage } from '@/lib/images';
+import { parseActivity } from '@/lib/measures/activity-parse';
 import { recordActivity, recordMood, recordWeight } from '@/lib/measures';
 import { interpretMealImage } from '@/lib/vision';
 import { downloadFile, getFile, sendMessage } from './api';
@@ -84,11 +85,15 @@ async function handleMessage(msg: TelegramMessage): Promise<void> {
   if (text.startsWith('/activity')) {
     const rest = text.slice('/activity'.length).trim();
     if (!rest) {
-      await sendMessage(chatId, 'Usage: /activity ran 5km 28min');
+      await sendMessage(chatId, 'Usage: /activity run 28min [optional note]');
       return;
     }
-    recordActivity(user.id, rest);
-    await sendMessage(chatId, `✓ activity logged`);
+    const parsed = parseActivity(rest);
+    recordActivity(user.id, parsed);
+    const label = parsed.category ?? 'activity';
+    const dur = parsed.durationMin != null ? ` · ${parsed.durationMin} min` : '';
+    const hint = parsed.durationMin == null ? ' (no duration parsed — not graphable)' : '';
+    await sendMessage(chatId, `✓ activity logged: <b>${escapeHtml(label)}</b>${dur}${hint}`);
     return;
   }
 
@@ -99,7 +104,7 @@ async function handleMessage(msg: TelegramMessage): Promise<void> {
         '<b>Health Vault</b>',
         '/weight 82.4 — log weight (kg)',
         '/mood 1-5 [note] — log mood',
-        '/activity ran 5km 28min — log activity',
+        '/activity run 28min [note] — log activity (duration is graphed)',
         'Plain text — logged as a food entry',
         'Photo (with optional caption) — meal photo, AI-identified',
         'Two-digit code — completes a pending web login',

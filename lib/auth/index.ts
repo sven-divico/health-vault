@@ -129,3 +129,16 @@ export function isSessionAuthenticated(sessionId: string): boolean {
   const s = getSession(sessionId);
   return !!s?.authenticated;
 }
+
+export function createAuthenticatedSession(userId: number): string {
+  const sessionId = token(24);
+  const now = new Date();
+  db().insert(sessions).values({
+    id: sessionId,
+    userId,
+    authenticated: true,
+    createdAt: now,
+    expiresAt: new Date(now.getTime() + SESSION_TTL_MS),
+  }).run();
+  return sessionId;
+}

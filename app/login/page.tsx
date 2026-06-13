@@ -51,26 +51,38 @@ export default function LoginPage() {
     <div className="mx-auto max-w-sm py-12">
       <h1 className="text-2xl font-semibold">Login</h1>
       {!code ? (
-        <form onSubmit={start} className="mt-6 space-y-3">
-          <label className="block text-sm">
-            Username
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 w-full rounded border border-neutral-300 bg-white px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
-              autoFocus
-            />
-          </label>
+        <>
+          <form onSubmit={start} className="mt-6 space-y-3">
+            <label className="block text-sm">
+              Username
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="mt-1 w-full rounded border border-neutral-300 bg-white px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+                autoFocus
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={submitting || !username}
+              className="rounded bg-neutral-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
+            >
+              {submitting ? '…' : 'Continue'}
+            </button>
+            {error && <p className="text-sm text-red-600">{error}</p>}
+          </form>
           <button
-            type="submit"
-            disabled={submitting || !username}
-            className="rounded bg-neutral-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
+            type="button"
+            onClick={async () => {
+              const r = await fetch('/api/auth/demo', { method: 'POST' });
+              if (r.ok) router.push('/'); else setError('Demo not available — run `npm run db:seed-demo`.');
+            }}
+            className="mt-2 block text-sm underline"
           >
-            {submitting ? '…' : 'Continue'}
+            View demo (no Telegram needed)
           </button>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-        </form>
+        </>
       ) : (
         <div className="mt-6 space-y-3">
           <p className="text-sm text-neutral-600 dark:text-neutral-400">

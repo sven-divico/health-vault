@@ -71,6 +71,7 @@ export const measurements = sqliteTable(
     userId: integer('user_id').notNull().references(() => users.id),
     loggedAt: integer('logged_at', { mode: 'timestamp' }).notNull(),
     kind: text('kind', { enum: ['weight', 'mood', 'activity'] }).notNull(),
+    category: text('category'),
     valueNumeric: real('value_numeric'),
     valueText: text('value_text'),
     note: text('note'),
