@@ -52,12 +52,14 @@ function seed(userId: number) {
   const userImgDir = join(IMG_ROOT, String(userId));
   mkdirSync(userImgDir, { recursive: true });
   const dishes = ['Oatmeal & berries', 'Chicken salad', 'Salmon & rice', 'Veggie stir-fry', 'Greek yogurt'];
+  let imageCount = 0;
   for (let n = 0; n < 18; n++) {
     const t = new Date(now - Math.floor((n / 18) * DAYS) * dayMs - 3_600_000 * (n % 6));
     const withImage = n % 4 === 0;
     let imagePath: string | null = null;
     if (withImage) {
-      const srcIdx = (n % 4) + 1;
+      const srcIdx = (imageCount % 4) + 1;
+      imageCount++;
       const src = resolve('scripts/seed-assets', `meal-${srcIdx}.jpg`);
       const name = `seed-${n}.jpg`;
       if (existsSync(src)) { copyFileSync(src, join(userImgDir, name)); imagePath = `${userId}/${name}`; }
