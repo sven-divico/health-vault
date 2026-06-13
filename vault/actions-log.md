@@ -4,6 +4,20 @@ Append-only. Newest entries at the top.
 
 ---
 
+## 2026-06-13 — Chart axis-label polish (deployed)
+
+**Action:** Decluttered ECharts axis labels on narrow screens — `hideOverlap` + smaller
+fonts on the time axis (fixed crowded "29Apr"/"26May" labels), fewer y-gridlines
+(`splitNumber`), subtle spaced lane names in the stacked Insights view. Verified at 375px
++ desktop (stacked + overlay) via preview; deployed; prod `/login` 200.
+Files: `components/insights/InsightsView.tsx`, `components/MeasureCharts.tsx`.
+
+**Pending (discussion only, no code yet):** image-detection token-usage optimization
+(`lib/vision/index.ts`). Options under review — see chat. Likely first move: select a
+smaller Telegram photo size instead of the largest.
+
+---
+
 ## 2026-06-13 — Responsive mobile nav + permanent permission fix (deployed)
 
 **Action:** Implemented responsive navigation and made the data-dir permission fix
