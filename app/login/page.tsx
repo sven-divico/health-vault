@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { t } from '@/lib/i18n/de';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function LoginPage() {
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        setError(j.error ?? 'login failed');
+        setError(j.error ?? t.login.loginFailed);
         setCode(null);
         return;
       }
@@ -49,12 +50,12 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto max-w-sm py-12">
-      <h1 className="text-2xl font-semibold">Login</h1>
+      <h1 className="text-2xl font-semibold">{t.login.title}</h1>
       {!code ? (
         <>
           <form onSubmit={start} className="mt-6 space-y-3">
             <label className="block text-sm">
-              Username
+              {t.login.username}
               <input
                 type="text"
                 value={username}
@@ -68,7 +69,7 @@ export default function LoginPage() {
               disabled={submitting || !username}
               className="rounded bg-neutral-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
             >
-              {submitting ? '…' : 'Continue'}
+              {submitting ? t.login.submitting : t.login.continue}
             </button>
             {error && <p className="text-sm text-red-600">{error}</p>}
           </form>
@@ -76,17 +77,17 @@ export default function LoginPage() {
             type="button"
             onClick={async () => {
               const r = await fetch('/api/auth/demo', { method: 'POST' });
-              if (r.ok) router.push('/'); else setError('Demo not available — run `npm run db:seed-demo`.');
+              if (r.ok) router.push('/'); else setError(t.login.demoUnavailable);
             }}
             className="mt-2 block text-sm underline"
           >
-            View demo (no Telegram needed)
+            {t.login.viewDemo}
           </button>
         </>
       ) : (
         <div className="mt-6 space-y-3">
           <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            Send this 2-digit code to the Health Vault bot on Telegram within {secondsLeft}s:
+            {t.login.codeInstructions(secondsLeft)}
           </p>
           <div className="rounded-lg border-2 border-neutral-900 bg-neutral-50 p-6 text-center text-5xl font-mono tracking-widest dark:border-neutral-100 dark:bg-neutral-900">
             {code}
@@ -94,10 +95,10 @@ export default function LoginPage() {
           {secondsLeft === 0 && (
             <button
               type="button"
-              onClick={() => { setCode(null); setError('Code expired. Try again.'); }}
+              onClick={() => { setCode(null); setError(t.login.codeExpired); }}
               className="text-sm underline"
             >
-              Restart
+              {t.login.restart}
             </button>
           )}
         </div>

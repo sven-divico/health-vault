@@ -56,11 +56,43 @@ export const foodEntries = sqliteTable(
     imagePath: text('image_path'),
     dishName: text('dish_name'),
     ingredientsJson: text('ingredients_json'),
-    estimatedKcal: integer('estimated_kcal'),
+    // Nutrition stored per-100 g + an estimated portion; absolutes are derived on read
+    // (lib/nutrition). A portion change scales linearly (no AI); a dish change re-estimates
+    // only the per-100 g values.
+    portionG: real('portion_g'),
+    kcalPer100g: real('kcal_per_100g'),
+    carbsGPer100g: real('carbs_g_per_100g'),
+    sugarGPer100g: real('sugar_g_per_100g'),
+    fatGPer100g: real('fat_g_per_100g'),
+    saturatedFatGPer100g: real('saturated_fat_g_per_100g'),
+    proteinGPer100g: real('protein_g_per_100g'),
+    fiberGPer100g: real('fiber_g_per_100g'),
+    saltGPer100g: real('salt_g_per_100g'),
     visionConfidence: real('vision_confidence'),
   },
   (t) => ({
     userTimeIdx: index('food_user_time_idx').on(t.userId, t.loggedAt),
+  }),
+);
+
+export const drinkEntries = sqliteTable(
+  'drink_entries',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id').notNull().references(() => users.id),
+    loggedAt: integer('logged_at', { mode: 'timestamp' }).notNull(),
+    source: text('source', { enum: ['text', 'web'] }).notNull(),
+    name: text('name'),
+    volumeMl: real('volume_ml').notNull(),
+    // Concentration per 100 ml (same recalc principle as food's per-100 g): a volume edit
+    // rescales linearly, a name edit re-estimates these. alcohol_g_per_100ml = ABV% × 0.789.
+    alcoholGPer100ml: real('alcohol_g_per_100ml'),
+    sugarGPer100ml: real('sugar_g_per_100ml'),
+    rawText: text('raw_text'),
+    visionConfidence: real('vision_confidence'),
+  },
+  (t) => ({
+    userTimeIdx: index('drink_user_time_idx').on(t.userId, t.loggedAt),
   }),
 );
 
@@ -87,6 +119,7 @@ export const visionUsage = sqliteTable(
     id: integer('id').primaryKey({ autoIncrement: true }),
     userId: integer('user_id').notNull().references(() => users.id),
     foodEntryId: integer('food_entry_id').references(() => foodEntries.id),
+    drinkEntryId: integer('drink_entry_id').references(() => drinkEntries.id),
     loggedAt: integer('logged_at', { mode: 'timestamp' }).notNull(),
     model: text('model').notNull(),
     srcBytes: integer('src_bytes').notNull(),
@@ -106,5 +139,6 @@ export const visionUsage = sqliteTable(
 
 export type User = typeof users.$inferSelect;
 export type FoodEntry = typeof foodEntries.$inferSelect;
+export type DrinkEntry = typeof drinkEntries.$inferSelect;
 export type Measurement = typeof measurements.$inferSelect;
 export type VisionUsageRow = typeof visionUsage.$inferSelect;

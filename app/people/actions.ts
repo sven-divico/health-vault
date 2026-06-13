@@ -4,11 +4,12 @@ import { db } from '@/lib/db/client';
 import { users } from '@/lib/db/schema';
 import { createInvite } from '@/lib/auth';
 import { ADMIN_COOKIE, checkSecret, isAdminCookieValid } from '@/lib/admin';
+import { t } from '@/lib/i18n/de';
 
 export async function unlockAdmin(formData: FormData) {
   const secret = String(formData.get('secret') ?? '');
   const tokenVal = checkSecret(secret);
-  if (!tokenVal) return { ok: false as const, error: 'Invalid secret' };
+  if (!tokenVal) return { ok: false as const, error: t.people.invalidSecret };
   (await cookies()).set(ADMIN_COOKIE, tokenVal, {
     httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 60 * 60 * 8,
   });
@@ -28,7 +29,7 @@ export async function listUsers() {
 export async function createInviteAction(formData: FormData) {
   await requireAdmin();
   const username = String(formData.get('username') ?? '').trim();
-  if (!username) return { ok: false as const, error: 'username required' };
+  if (!username) return { ok: false as const, error: t.people.usernameRequired };
   const token = createInvite(username);
   return { ok: true as const, token, startCommand: `/start ${token}` };
 }

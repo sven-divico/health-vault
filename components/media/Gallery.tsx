@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { fmt } from '@/lib/i18n/de';
 
 interface Item { id: number; imagePath: string; name: string; caption: string | null; loggedAt: number }
 
@@ -20,7 +21,7 @@ export function Gallery({ items }: { items: Item[] }) {
             <img src={`/api/images/${open.imagePath}`} alt={open.name} className="mb-2 w-full rounded object-contain" />
             <div className="font-medium">{open.name}</div>
             {open.caption && <div className="text-sm text-neutral-500">"{open.caption}"</div>}
-            <div className="text-xs text-neutral-400">{new Date(open.loggedAt).toLocaleString()}</div>
+            <div className="text-xs text-neutral-400">{fmt.dateTime(open.loggedAt)}</div>
           </div>
         </div>
       )}

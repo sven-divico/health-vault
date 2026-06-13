@@ -1,6 +1,12 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
+// @ts-expect-error — echarts locale bundle has no type declarations. The `-obj`
+// variant exports the plain locale object (the bare `langDE` self-registers onto a
+// possibly-different echarts instance, so we register the object ourselves).
+import langDE from 'echarts/i18n/langDE-obj';
+
+echarts.registerLocale('DE', langDE);
 
 export function EChart({ option, className }: { option: echarts.EChartsOption; className?: string }) {
   const elRef = useRef<HTMLDivElement>(null);
@@ -8,7 +14,7 @@ export function EChart({ option, className }: { option: echarts.EChartsOption; c
 
   useEffect(() => {
     if (!elRef.current) return;
-    const chart = echarts.init(elRef.current);
+    const chart = echarts.init(elRef.current, undefined, { locale: 'DE' });
     chartRef.current = chart;
     const ro = new ResizeObserver(() => chart.resize());
     ro.observe(elRef.current);

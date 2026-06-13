@@ -1,4 +1,4 @@
-import { mkdirSync, createReadStream, statSync, existsSync } from 'node:fs';
+import { mkdirSync, createReadStream, statSync, existsSync, unlinkSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { join, resolve, normalize, sep } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -24,6 +24,13 @@ export function resolveImagePath(userId: number, relative: string): string | nul
   if (!normalized.startsWith(userDir + sep) && normalized !== userDir) return null;
   if (!existsSync(normalized)) return null;
   return normalized;
+}
+
+/** Delete a user's image file (path-traversal-safe; no-op if missing). */
+export function deleteImage(userId: number, relative: string): void {
+  const abs = resolveImagePath(userId, relative);
+  if (!abs) return;
+  try { unlinkSync(abs); } catch { /* already gone — ignore */ }
 }
 
 export function streamImage(absolutePath: string) {

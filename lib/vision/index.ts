@@ -1,10 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk';
 import jpeg from 'jpeg-js';
+import type { EntryNutrition } from '@/lib/nutrition';
 
-export interface MealInterpretation {
+export interface MealInterpretation extends EntryNutrition {
   dishName: string | null;
   ingredients: string[];
-  estimatedKcal: number | null;
   confidence: number;
   raw: string;
 }
@@ -27,13 +27,32 @@ export interface MealResult {
   usage: VisionUsage | null;
 }
 
-const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
+export const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 
-const SYSTEM = `You are a nutrition assistant. Identify the meal in the photo.
-- dish_name: short common name (e.g. "Spaghetti Carbonara"), or null if not a meal.
-- ingredients: best-effort list of visible components.
-- estimated_kcal: rough total for the visible portion, integer, or null.
+const SYSTEM = `You are a nutrition assistant. Identify the meal in the photo and estimate its
+nutrition per 100 g (typical values for the dish), plus the size of the visible portion.
+- dish_name: short common name in GERMAN (e.g. "Spaghetti Carbonara" stays, but use
+  "Apfelkuchen" not "Apple Pie"), or null if not a meal.
+- ingredients: best-effort list of visible components, in German.
+- portion_g: estimated grams of the VISIBLE portion, or null.
+- *_per_100g: nutrition per 100 g of the dish (energy in kcal, the rest in grams), or null.
 - confidence: 0..1 self-rated certainty in the dish identification.`;
+
+// Shared nutrition fields for the structured-output schema. Each is number|null; all must
+// appear in BOTH `properties` AND `required` (structured-outputs contract), nullables via anyOf.
+const NUM_OR_NULL = { anyOf: [{ type: 'number' }, { type: 'null' }] };
+export const NUTRITION_PROPERTIES = {
+  portion_g: { ...NUM_OR_NULL, description: 'estimated grams of the visible portion' },
+  kcal_per_100g: { ...NUM_OR_NULL, description: 'energy (kcal) per 100 g' },
+  carbs_g_per_100g: { ...NUM_OR_NULL, description: 'carbohydrates (g) per 100 g' },
+  sugar_g_per_100g: { ...NUM_OR_NULL, description: 'of which sugar (g) per 100 g' },
+  fat_g_per_100g: { ...NUM_OR_NULL, description: 'fat (g) per 100 g' },
+  saturated_fat_g_per_100g: { ...NUM_OR_NULL, description: 'of which saturated fat (g) per 100 g' },
+  protein_g_per_100g: { ...NUM_OR_NULL, description: 'protein (g) per 100 g' },
+  fiber_g_per_100g: { ...NUM_OR_NULL, description: 'fiber (g) per 100 g' },
+  salt_g_per_100g: { ...NUM_OR_NULL, description: 'salt (g) per 100 g' },
+} as const;
+export const NUTRITION_KEYS = Object.keys(NUTRITION_PROPERTIES);
 
 // JSON Schema for structured outputs (output_config.format). All properties required +
 // additionalProperties:false per the structured-outputs contract; nullables via anyOf.
@@ -42,11 +61,33 @@ const MEAL_SCHEMA = {
   properties: {
     dish_name: { anyOf: [{ type: 'string' }, { type: 'null' }], description: 'short common dish name, or null if not a meal' },
     ingredients: { type: 'array', items: { type: 'string' }, description: 'visible components' },
-    estimated_kcal: { anyOf: [{ type: 'integer' }, { type: 'null' }], description: 'rough total kcal for the visible portion' },
+    ...NUTRITION_PROPERTIES,
     confidence: { type: 'number', description: '0..1 self-rated certainty in the identification' },
   },
-  required: ['dish_name', 'ingredients', 'estimated_kcal', 'confidence'],
+  required: ['dish_name', 'ingredients', ...NUTRITION_KEYS, 'confidence'],
   additionalProperties: false,
+};
+
+/** Map a parsed JSON object's snake_case nutrition keys to the EntryNutrition shape. */
+export function parseNutrition(j: Record<string, unknown>): EntryNutrition {
+  const num = (k: string): number | null => (typeof j[k] === 'number' ? (j[k] as number) : null);
+  return {
+    portionG: num('portion_g'),
+    kcalPer100g: num('kcal_per_100g'),
+    carbsGPer100g: num('carbs_g_per_100g'),
+    sugarGPer100g: num('sugar_g_per_100g'),
+    fatGPer100g: num('fat_g_per_100g'),
+    saturatedFatGPer100g: num('saturated_fat_g_per_100g'),
+    proteinGPer100g: num('protein_g_per_100g'),
+    fiberGPer100g: num('fiber_g_per_100g'),
+    saltGPer100g: num('salt_g_per_100g'),
+  };
+}
+
+const EMPTY_NUTRITION: EntryNutrition = {
+  portionG: null, kcalPer100g: null, carbsGPer100g: null, sugarGPer100g: null,
+  fatGPer100g: null, saturatedFatGPer100g: null, proteinGPer100g: null,
+  fiberGPer100g: null, saltGPer100g: null,
 };
 
 /**
@@ -58,7 +99,7 @@ export function visionCostMicroUsd(inputTokens: number, outputTokens: number): n
 }
 
 function emptyInterpretation(raw: string): MealInterpretation {
-  return { dishName: null, ingredients: [], estimatedKcal: null, confidence: 0, raw };
+  return { dishName: null, ingredients: [], ...EMPTY_NUTRITION, confidence: 0, raw };
 }
 
 export interface Downsampled { data: Buffer; width: number; height: number }
@@ -185,7 +226,7 @@ function parseInterpretation(text: string): MealInterpretation {
     return {
       dishName: typeof j.dish_name === 'string' ? j.dish_name : null,
       ingredients: Array.isArray(j.ingredients) ? j.ingredients.filter((x: unknown) => typeof x === 'string') : [],
-      estimatedKcal: typeof j.estimated_kcal === 'number' ? j.estimated_kcal : null,
+      ...parseNutrition(j),
       confidence: typeof j.confidence === 'number' ? j.confidence : 0,
       raw: text,
     };

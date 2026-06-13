@@ -3,16 +3,17 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV, type NavItem } from '@/lib/nav';
+import { t } from '@/lib/i18n/de';
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <aside className="flex h-full w-full flex-col overflow-y-auto border-r border-neutral-200 bg-neutral-50 md:h-screen dark:border-neutral-800 dark:bg-neutral-900">
       <div className="flex items-center justify-between px-4 py-4">
-        <span className="font-semibold tracking-tight">🩺 Health Vault</span>
+        <span className="font-semibold tracking-tight">🩺 {t.brand}</span>
         <button
           type="button"
           onClick={onNavigate}
-          aria-label="Close navigation menu"
+          aria-label={t.common.closeMenu}
           className="-mr-1 rounded-lg p-1 text-neutral-500 transition-colors hover:bg-neutral-200 md:hidden dark:hover:bg-neutral-800"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">

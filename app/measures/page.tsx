@@ -1,38 +1,39 @@
+import { cookies } from 'next/headers';
 import { requireUser } from '@/lib/auth/server';
 import { listMeasurements } from '@/lib/measures';
-import { MeasureCharts } from '@/components/MeasureCharts';
+import { MeasuresView } from '@/components/measures/MeasuresView';
+import { TIMERANGE_COOKIE, toRangeKey } from '@/lib/time-range';
+import { t } from '@/lib/i18n/de';
 
 export const dynamic = 'force-dynamic';
 
+// Effectively "all" — volume is tiny; the time-window pills filter client-side.
+const ALL = 100_000;
+
 export default async function MeasuresPage() {
   const user = await requireUser();
-  const weight = listMeasurements(user.id, 'weight', 365).reverse();
-  const mood = listMeasurements(user.id, 'mood', 365).reverse();
-  const activity = listMeasurements(user.id, 'activity', 100);
+  const initialRange = toRangeKey((await cookies()).get(TIMERANGE_COOKIE)?.value);
+  const weight = listMeasurements(user.id, 'weight', ALL).reverse();
+  const mood = listMeasurements(user.id, 'mood', ALL).reverse();
+  const activity = listMeasurements(user.id, 'activity', ALL);
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold">Measures</h1>
+      <h1 className="text-2xl font-semibold">{t.measures.title}</h1>
 
-      <MeasureCharts
+      <MeasuresView
+        initialRange={initialRange}
         weight={weight.map((m) => ({ t: m.loggedAt.getTime(), v: m.valueNumeric ?? 0 }))}
         mood={mood.map((m) => ({ t: m.loggedAt.getTime(), v: m.valueNumeric ?? 0 }))}
+        activity={activity.map((a) => ({
+          id: a.id,
+          loggedAt: a.loggedAt.getTime(),
+          category: a.category,
+          valueNumeric: a.valueNumeric,
+          note: a.note,
+          valueText: a.valueText,
+        }))}
       />
-
-      <section>
-        <h2 className="mb-2 text-lg font-semibold">Activity</h2>
-        <ul className="space-y-1">
-          {activity.map((a) => (
-            <li key={a.id} className="rounded border border-neutral-200 px-3 py-2 text-sm dark:border-neutral-800">
-              <span className="mr-2 text-xs text-neutral-500">{new Date(a.loggedAt).toLocaleString()}</span>
-              <span className="font-medium">{a.category ?? 'activity'}</span>
-              {a.valueNumeric != null && <span className="text-neutral-500"> · {a.valueNumeric} min</span>}
-              {(a.note ?? a.valueText) && <span className="text-neutral-500"> · {a.note ?? a.valueText}</span>}
-            </li>
-          ))}
-          {activity.length === 0 && <li className="text-sm text-neutral-500">No activity entries.</li>}
-        </ul>
-      </section>
     </div>
   );
 }

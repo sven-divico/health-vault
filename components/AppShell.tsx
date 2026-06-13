@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Sidebar } from './Sidebar';
+import { t } from '@/lib/i18n/de';
 
 /**
  * Responsive application shell.
@@ -33,7 +34,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-neutral-200 bg-neutral-50/85 px-4 py-3 backdrop-blur md:hidden dark:border-neutral-800 dark:bg-neutral-900/85">
         <button
           type="button"
-          aria-label="Open navigation menu"
+          aria-label={t.common.openMenu}
           aria-expanded={open}
           onClick={() => setOpen(true)}
           className="-ml-1.5 rounded-lg p-1.5 text-neutral-700 transition-colors hover:bg-neutral-200 active:bg-neutral-300 dark:text-neutral-200 dark:hover:bg-neutral-800"
@@ -42,7 +43,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <path d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <span className="font-semibold tracking-tight">🩺 Health Vault</span>
+        <span className="font-semibold tracking-tight">🩺 {t.brand}</span>
       </header>
 
       {/* Backdrop (mobile only, when open) */}

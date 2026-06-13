@@ -4,7 +4,13 @@ import { saveImage } from '@/lib/images';
 import { parseActivity } from '@/lib/measures/activity-parse';
 import { recordActivity, recordMood, recordWeight } from '@/lib/measures';
 import { interpretMealImage } from '@/lib/vision';
+import { estimateDrinkFromText } from '@/lib/vision/text-estimate';
 import { recordVisionUsage } from '@/lib/vision/usage';
+import { absoluteNutrition } from '@/lib/nutrition';
+import { absoluteDrink } from '@/lib/drinks';
+import { createDrinkEntry } from '@/lib/drinks/queries';
+import { parseDrink } from '@/lib/drinks/parse';
+import { t } from '@/lib/i18n/de';
 import { downloadFile, getFile, sendMessage } from './api';
 import type { TelegramMessage, TelegramUpdate } from './types';
 
@@ -15,7 +21,7 @@ export async function dispatchUpdate(update: TelegramUpdate): Promise<void> {
     await handleMessage(msg);
   } catch (e) {
     console.error('[telegram] handler error:', e);
-    await safeReply(msg.chat.id, 'Sorry, something went wrong handling that message.');
+    await safeReply(msg.chat.id, t.bot.genericError);
   }
 }
 
@@ -28,26 +34,26 @@ async function handleMessage(msg: TelegramMessage): Promise<void> {
     const parts = text.split(/\s+/);
     const token = parts[1];
     if (!token) {
-      await sendMessage(chatId, 'Welcome. To bind this account use: /start &lt;invite-token&gt;');
+      await sendMessage(chatId, t.bot.welcomeNoToken);
       return;
     }
     const result = consumeInvite(token, fromId);
     if (!result.ok) {
       const m = {
-        invalid: 'Invite token not recognised.',
-        already_used: 'That invite token has already been used.',
-        telegram_already_linked: 'This Telegram account is already linked.',
+        invalid: t.bot.inviteInvalid,
+        already_used: t.bot.inviteAlreadyUsed,
+        telegram_already_linked: t.bot.telegramAlreadyLinked,
       }[result.reason];
       await sendMessage(chatId, m);
       return;
     }
-    await sendMessage(chatId, `Linked. Welcome, <b>${escapeHtml(result.username)}</b>.`);
+    await sendMessage(chatId, t.bot.linked(escapeHtml(result.username)));
     return;
   }
 
   const user = getUserByTelegramId(fromId);
   if (!user) {
-    await sendMessage(chatId, 'This Telegram account is not linked. Ask the admin for an invite link.');
+    await sendMessage(chatId, t.bot.notLinked);
     return;
   }
 
@@ -62,12 +68,12 @@ async function handleMessage(msg: TelegramMessage): Promise<void> {
     const rest = text.slice('/weight'.length).trim();
     const m = rest.match(/^(\d+(?:[.,]\d+)?)(?:\s+(.+))?$/);
     if (!m) {
-      await sendMessage(chatId, 'Usage: /weight 82.4 [optional note]');
+      await sendMessage(chatId, t.bot.weightUsage);
       return;
     }
     const kg = parseFloat(m[1].replace(',', '.'));
     recordWeight(user.id, kg, m[2]);
-    await sendMessage(chatId, `✓ weight ${kg.toFixed(1)} kg logged`);
+    await sendMessage(chatId, t.bot.weightLogged(kg.toFixed(1)));
     return;
   }
 
@@ -75,56 +81,70 @@ async function handleMessage(msg: TelegramMessage): Promise<void> {
     const rest = text.slice('/mood'.length).trim();
     const m = rest.match(/^([1-5])(?:\s+(.+))?$/);
     if (!m) {
-      await sendMessage(chatId, 'Usage: /mood 1-5 [optional note]');
+      await sendMessage(chatId, t.bot.moodUsage);
       return;
     }
     recordMood(user.id, Number(m[1]), m[2]);
-    await sendMessage(chatId, `✓ mood ${m[1]} logged`);
+    await sendMessage(chatId, t.bot.moodLogged(m[1]));
     return;
   }
 
   if (text.startsWith('/activity')) {
     const rest = text.slice('/activity'.length).trim();
     if (!rest) {
-      await sendMessage(chatId, 'Usage: /activity run 28min [optional note]');
+      await sendMessage(chatId, t.bot.activityUsage);
       return;
     }
     const parsed = parseActivity(rest);
     recordActivity(user.id, parsed);
-    const label = parsed.category ?? 'activity';
-    const dur = parsed.durationMin != null ? ` · ${parsed.durationMin} min` : '';
-    const hint = parsed.durationMin == null ? ' (no duration parsed — not graphable)' : '';
-    await sendMessage(chatId, `✓ activity logged: <b>${escapeHtml(label)}</b>${dur}${hint}`);
+    const label = parsed.category ?? t.measures.activityFallback;
+    const dur = parsed.durationMin != null ? t.bot.activityDurSuffix(parsed.durationMin) : '';
+    const hint = parsed.durationMin == null ? t.bot.activityNoDuration : '';
+    await sendMessage(chatId, t.bot.activityLogged(escapeHtml(label), dur, hint));
+    return;
+  }
+
+  if (text.startsWith('/drink')) {
+    const rest = text.slice('/drink'.length).trim();
+    const parsed = parseDrink(rest);
+    if (!parsed) {
+      await sendMessage(chatId, t.bot.drinkUsage);
+      return;
+    }
+    const est = await estimateDrinkFromText(parsed.name);
+    const entry = createDrinkEntry({
+      userId: user.id,
+      source: 'text',
+      name: parsed.name,
+      volumeMl: parsed.volumeMl,
+      alcoholGPer100ml: est.alcoholGPer100ml,
+      sugarGPer100ml: est.sugarGPer100ml,
+      rawText: rest,
+      visionConfidence: est.confidence,
+    });
+    if (est.usage) recordVisionUsage(user.id, null, est.usage, entry.id);
+    const alcoholG = absoluteDrink(entry).alcoholG;
+    const alcoholSuffix = alcoholG != null && alcoholG > 0 ? t.bot.drinkAlcoholSuffix(Math.round(alcoholG)) : '';
+    await sendMessage(chatId, t.bot.drinkLogged(escapeHtml(parsed.name), t.bot.drinkVolMl(parsed.volumeMl), alcoholSuffix));
     return;
   }
 
   if (text.startsWith('/help')) {
-    await sendMessage(
-      chatId,
-      [
-        '<b>Health Vault</b>',
-        '/weight 82.4 — log weight (kg)',
-        '/mood 1-5 [note] — log mood',
-        '/activity run 28min [note] — log activity (duration is graphed)',
-        'Plain text — logged as a food entry',
-        'Photo (with optional caption) — meal photo, AI-identified',
-        'Two-digit code — completes a pending web login',
-      ].join('\n'),
-    );
+    await sendMessage(chatId, t.bot.help);
     return;
   }
 
   // Two-digit login code?
   if (/^\d{2}$/.test(text)) {
     const ok = attemptLoginByCode(fromId, text);
-    await sendMessage(chatId, ok ? '✓ logged in on the web' : 'No pending login matches that code.');
+    await sendMessage(chatId, ok ? t.bot.loggedInWeb : t.bot.noPendingLogin);
     return;
   }
 
   // Otherwise: free text → food entry.
   if (text.length > 0) {
     createFoodTextEntry({ userId: user.id, text });
-    await sendMessage(chatId, `✓ logged: ${escapeHtml(text.slice(0, 60))}`);
+    await sendMessage(chatId, t.bot.textLogged(escapeHtml(text.slice(0, 60))));
   }
 }
 
@@ -132,7 +152,7 @@ async function handlePhoto(userId: number, chatId: number, msg: TelegramMessage)
   const largest = msg.photo!.reduce((a, b) => (a.file_size ?? 0) > (b.file_size ?? 0) ? a : b);
   const fileInfo = await getFile(largest.file_id);
   if (!fileInfo) {
-    await sendMessage(chatId, 'Could not retrieve the photo from Telegram.');
+    await sendMessage(chatId, t.bot.photoFetchFailed);
     return;
   }
   const buf = await downloadFile(fileInfo.file_path);
@@ -147,14 +167,15 @@ async function handlePhoto(userId: number, chatId: number, msg: TelegramMessage)
   });
   if (usage) recordVisionUsage(userId, entry.id, usage);
 
-  const label = interpretation.dishName ?? '(unrecognised meal)';
-  const kcal = interpretation.estimatedKcal != null ? ` ~${interpretation.estimatedKcal} kcal` : '';
+  const label = interpretation.dishName ?? t.bot.mealUnrecognised;
+  const kcalAbs = absoluteNutrition(interpretation).kcal;
+  const kcal = kcalAbs != null ? t.bot.photoKcalSuffix(Math.round(kcalAbs)) : '';
   let extra = '';
   if (usage && (process.env.VISION_SHOW_USAGE ?? 'true') !== 'false') {
     const cost = (usage.costMicroUsd / 1e6).toFixed(4);
     extra = `\n📷 ${usage.width}×${usage.height} · ${usage.inputTokens}/${usage.outputTokens} tok · ~$${cost} · ${usage.downsampleMs}ms`;
   }
-  await sendMessage(chatId, `✓ photo logged: <b>${escapeHtml(label)}</b>${kcal}${extra}`);
+  await sendMessage(chatId, t.bot.photoLogged(escapeHtml(label), kcal, extra));
 }
 
 async function safeReply(chatId: number, text: string) {
