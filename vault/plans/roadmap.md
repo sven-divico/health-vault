@@ -9,6 +9,19 @@ Delivered: domain sidebar shell · ECharts visualization · Insights correlation
 (stacked + overlay, shared zoom) · structured activity logging · media gallery ·
 demo user + correlated seed data · one-click demo login · People admin gate.
 
+## Phase A — German + time windows + Insights fix (designed, awaiting build)
+Spec: `docs/superpowers/specs/2026-06-13-phase-a-german-timewindows-design.md`.
+Full German (UI + bot + AI dish names) · reusable time-window pills (Today=local midnight,
+24h, 7d, Month, All) on Measures+Insights with cookie memory · fix sparse single-point
+series rendering invisibly (`showSymbol` adaptive) + default-select Food. No schema change.
+**Implement first.**
+
+## Phase B — Nutrition tracking (designed, awaiting build)
+Spec: `docs/superpowers/specs/2026-06-13-phase-b-nutrition-design.md`. Depends on Phase A.
+EU Big-7 + fiber stored per-100 g + portion (DB reset OK) · vision AI returns nutrition ·
+Nutrition page → table + period summaries + pagination (cookie) · edit/delete with
+recalculation (portion = scale, dish = AI re-estimate). Both specs spec-reviewed.
+
 ## Phase 2 — next
 - **Smart input parsing/normalization engine** — convert free-form Telegram input into
   structured numeric data across activity/food/measures (AI-assisted; the v1 activity
