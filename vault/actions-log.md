@@ -4,6 +4,21 @@ Append-only. Newest entries at the top.
 
 ---
 
+## 2026-06-13 — Production bot switched to @eat_0042_bot
+
+**Action:** User recreated the bot as **@eat_0042_bot** ("Food and Health Treacker",
+id 8069565772 — the token already present in local `.env.local`). Updated production:
+- Backed up + swapped `TELEGRAM_BOT_TOKEN` in server `.env`.
+- `docker compose up -d --force-recreate` to apply the new env.
+- Re-registered the webhook for the new bot (0 errors, 0 pending).
+- Confirmed `getMe` → `eat_0042_bot`; invite `EmYbRxYc8apaWOUh` still unconsumed.
+
+No code/README changes needed (bot username isn't hardcoded). Local `.env.local` already
+held this token, so local dev is consistent. The previous bot (@sven_health_vault_bot)
+is now unused.
+
+---
+
 ## 2026-06-13 — v1 deployed to production
 
 **Action:** Deployed v1 to https://health-vault.biztechbridge.com via `./deploy-to-prod.sh`
@@ -11,7 +26,8 @@ Append-only. Newest entries at the top.
 
 **Verified:** image rebuilt & container running; app created a fresh DB with the correct
 schema (`measurements.category` present, `__drizzle_migrations` recorded → clean migrate,
-no skip); webhook set (no errors); public `/login` → 200; bot = **@sven_health_vault_bot**.
+no skip); webhook set (no errors); public `/login` → 200; bot = **@eat_0042_bot**
+(initially deployed against @sven_health_vault_bot; switched — see entry above).
 
 **Login "bug" (local) was environmental, not code:** dev server had been started before
 `.env.development.local` existed, so `/api/auth/demo` 500'd on the `/data` path. Buttons
