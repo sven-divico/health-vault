@@ -4,6 +4,44 @@ Append-only. Newest entries at the top.
 
 ---
 
+## 2026-06-13 — v1 Chunks 4 & 5 + end-to-end smoke test (v1 COMPLETE)
+
+**Action:** Implemented Chunk 4 (media) + Chunk 5 (demo/seed/admin) via subagent-driven
+development, then ran a full end-to-end smoke test. Final holistic review: **ready to merge.**
+
+**Shipped:**
+- Media gallery (`/media`) — grid + enlarge, from `food_entries` images.
+- `createAuthenticatedSession` (TDD); demo seed script (idempotent, correlated 90-day data,
+  cycles 4 CC0 placeholder meal images); one-click "View demo" login bound to the demo user;
+  People admin page with a minimal admin gate (HMAC-derived cookie, constant-time compare).
+
+**Bugs caught & fixed during build/review/smoke:**
+- Seed images all used meal-1 (counter bug) → cycle through all 4.
+- **Runtime-only bug the smoke test caught:** inline `<form action>` wrappers in the People
+  Server Component needed a `'use server'` directive — build+tsc passed but the page 500'd
+  until fixed. Lesson: build/tsc ≠ runtime for RSC/server-action boundaries.
+
+**Smoke test result (dev server, demo login):** all routes 200 (/, /measures, /insights,
+/media, /food, /people, /settings), images serve (image/jpeg), unauth → 307 redirect,
+structured activity categories + charts + correlation chips all render with seeded data.
+
+**Tests:** 11/11 passing. `npm run build` succeeds.
+
+### ⚠️ Local-dev setup gotcha (discovered)
+`.env.local` sets `DATABASE_URL=file:/data/vault.sqlite` and `IMAGE_DIR=/data/images`
+(absolute — for the Docker container). Two consequences locally:
+1. `next dev` reads `.env.local` → tries `/data` → ENOENT. Run dev with overrides:
+   `DATABASE_URL=file:./data/vault.sqlite IMAGE_DIR=./data/images npm run dev`.
+2. Standalone scripts (`migrate.ts`, `seed-demo.ts`) load `.env` (dotenv default), NOT
+   `.env.local` — so they already use the local `./data` default. This means dev server
+   and scripts can disagree about the DB location unless dev is given matching overrides.
+**Follow-up candidate:** add a committed `.env.development` (local paths) or document this,
+so local dev "just works" without manual overrides.
+
+**Next:** finish/merge the branch.
+
+---
+
 ## 2026-06-13 — v1 Chunk 3 implemented (visualization + Insights)
 
 **Action:** Executed Chunk 3 via subagent-driven development (implement + spec/quality
