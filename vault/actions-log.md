@@ -4,6 +4,32 @@ Append-only. Newest entries at the top.
 
 ---
 
+## 2026-06-13 — v1 deployed to production
+
+**Action:** Deployed v1 to https://health-vault.biztechbridge.com via `./deploy-to-prod.sh`
+(rsync → `docker compose up --build -d`). Registered Telegram webhook; created first invite.
+
+**Verified:** image rebuilt & container running; app created a fresh DB with the correct
+schema (`measurements.category` present, `__drizzle_migrations` recorded → clean migrate,
+no skip); webhook set (no errors); public `/login` → 200; bot = **@sven_health_vault_bot**.
+
+**Login "bug" (local) was environmental, not code:** dev server had been started before
+`.env.development.local` existed, so `/api/auth/demo` 500'd on the `/data` path. Buttons
+hydrate and fire correctly (verified in-browser). Fix = restart dev server.
+
+### ⚠️ Prod deployment gotcha (FIXED manually, needs permanent fix)
+The container runs as **uid 1001 (nextjs)** but the bind-mounted `./data` was owned by
+`btbadmin` (775) → uid 1001 had no write permission → the app could NOT create
+`/data/vault.sqlite` (data dir had been empty for 2 weeks, unnoticed due to no traffic).
+**Fixed by:** `sudo chown -R 1001:1001 /home/btbadmin/health-vault/data`. Persists across
+deploys (rsync excludes `data`). **Follow-up:** make permanent — either `setup-server.sh`
+should `chown 1001:1001 data`, or add a root entrypoint that chowns `/data` then drops to
+nextjs. Otherwise a fresh server setup repeats this.
+
+**Next:** user to test Telegram flow (/start invite → log data → web login via 2-digit code).
+
+---
+
 ## 2026-06-13 — v1 Chunks 4 & 5 + end-to-end smoke test (v1 COMPLETE)
 
 **Action:** Implemented Chunk 4 (media) + Chunk 5 (demo/seed/admin) via subagent-driven
