@@ -52,6 +52,11 @@ set -euo pipefail
 echo "→ Creating $REMOTE_DIR (and data/)..."
 mkdir -p "$REMOTE_DIR/data"
 
+# The container runs as uid 1001 (the 'nextjs' user from the Dockerfile). The bind-mounted
+# data/ dir must be writable by that uid or the app cannot create the SQLite DB / images.
+echo "→ Ensuring data/ is writable by the container user (uid 1001)..."
+sudo -n chown -R 1001:1001 "$REMOTE_DIR/data"
+
 ENV_FILE="$REMOTE_DIR/.env"
 if [[ -f "$ENV_FILE" ]]; then
   echo "→ $ENV_FILE already exists — leaving it untouched."
