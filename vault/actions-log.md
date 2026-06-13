@@ -4,6 +4,26 @@ Append-only. Newest entries at the top.
 
 ---
 
+## 2026-06-13 — v1 Chunk 3 implemented (visualization + Insights)
+
+**Action:** Executed Chunk 3 via subagent-driven development (implement + spec/quality
+review per task). Branch `feature/v1-design-and-vault`. **Build is green again.**
+
+**Shipped:**
+- `components/charts/EChart.tsx` — generic ECharts wrapper (init/resize/dispose).
+- Rebuilt `MeasureCharts` + `MoodSparkline` on ECharts with `dataZoom` (cleared the
+  recharts build errors). Prop shapes unchanged → callers untouched.
+- `lib/insights/index.ts` — metric defs + series builders incl. pure `sumKcalByDay`
+  (per-UTC-day kcal aggregation). 1 test.
+- `app/insights/page.tsx` + `components/insights/InsightsView.tsx` — the correlation view:
+  chip series-picker, **stacked-&-synced** lanes (one shared `dataZoom` across all lanes,
+  `axisPointer.link`), and an **overlay** (multi-Y-axis) toggle.
+
+**Tests:** 10/10 passing. `npm run build` succeeds; `/insights` route live.
+**Next:** Chunk 4 — media gallery.
+
+---
+
 ## 2026-06-13 — v1 Chunk 2 implemented (app shell / sidebar)
 
 **Action:** Executed Chunk 2 via subagent-driven development (implement + spec/quality
