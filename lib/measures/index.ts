@@ -16,9 +16,20 @@ export function recordMood(userId: number, score: number, note?: string) {
   }).returning().get();
 }
 
-export function recordActivity(userId: number, description: string) {
+export interface RecordActivityInput {
+  category: string | null;
+  durationMin: number | null;
+  note: string | null;
+}
+
+export function recordActivity(userId: number, input: RecordActivityInput) {
   return db().insert(measurements).values({
-    userId, loggedAt: new Date(), kind: 'activity', valueText: description,
+    userId,
+    loggedAt: new Date(),
+    kind: 'activity',
+    category: input.category,
+    valueNumeric: input.durationMin,
+    note: input.note,
   }).returning().get();
 }
 

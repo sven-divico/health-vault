@@ -25,7 +25,9 @@ export default async function MeasuresPage() {
           {activity.map((a) => (
             <li key={a.id} className="rounded border border-neutral-200 px-3 py-2 text-sm dark:border-neutral-800">
               <span className="mr-2 text-xs text-neutral-500">{new Date(a.loggedAt).toLocaleString()}</span>
-              {a.valueText}
+              <span className="font-medium">{a.category ?? 'activity'}</span>
+              {a.valueNumeric != null && <span className="text-neutral-500"> · {a.valueNumeric} min</span>}
+              {(a.note ?? a.valueText) && <span className="text-neutral-500"> · {a.note ?? a.valueText}</span>}
             </li>
           ))}
           {activity.length === 0 && <li className="text-sm text-neutral-500">No activity entries.</li>}
