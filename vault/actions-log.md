@@ -4,6 +4,26 @@ Append-only. Newest entries at the top.
 
 ---
 
+## 2026-06-13 — v1 Chunk 1 implemented (data foundations)
+
+**Action:** Executed Chunk 1 of the v1 plan via subagent-driven development (implementer +
+spec/quality review per task). Branch `feature/v1-design-and-vault`.
+
+**Shipped:**
+- Replaced Recharts with Apache ECharts (`echarts@5.6.0`); added `npm test` (`tsx --test`).
+- Added nullable `category` column to `measurements` (migration `0001_lazy_solo`).
+- DB client supports in-memory SQLite (`DATABASE_URL=file::memory:`) for tests.
+- Activity parser `lib/measures/activity-parse.ts` (`parseActivity`) — 8 tests.
+- `recordActivity` now structured `{category, durationMin, note}`; wired into bot `/activity`
+  + `/help`; measures page renders new + legacy activity rows.
+- **Fixes found in review:** added missing `dotenv` devDependency (broke `db:migrate`);
+  fixed parser bug where bare `m` misread metre distances as minutes.
+
+**Tests:** 9/9 passing (8 parser + 1 recordActivity).
+**Next:** Chunk 2 — app shell (sidebar).
+
+---
+
 ## 2026-06-13 — v1 brainstorm complete, spec written
 
 **Action:** Ran the brainstorming workflow (with browser companion) for v1. Reached
