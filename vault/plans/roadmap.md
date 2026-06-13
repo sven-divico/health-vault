@@ -22,6 +22,13 @@ EU Big-7 + fiber stored per-100 g + portion (DB reset OK) · vision AI returns n
 Nutrition page → table + period summaries + pagination (cookie) · edit/delete with
 recalculation (portion = scale, dish = AI re-estimate). Both specs spec-reviewed.
 
+## Phase C — Drinks (designed, awaiting build)
+Spec: `docs/superpowers/specs/2026-06-13-phase-c-drinks-design.md`. Depends on Phase B.
+Nutrition → Essen/Getränke nav group · `drink_entries` (volume + per-100ml alcohol/sugar) ·
+bot `/drink` + web add/edit/delete with AI text-estimate · drinks table + period summaries +
+pagination · **water donut** (all drink volume today vs flat 2.0 L, EFSA) · Insights gains
+Getränke (ml) + Alkohol (g) categories. Spec-reviewed (approved).
+
 ## Phase 2 — next
 - **Smart input parsing/normalization engine** — convert free-form Telegram input into
   structured numeric data across activity/food/measures (AI-assisted; the v1 activity
