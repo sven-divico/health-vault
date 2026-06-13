@@ -53,15 +53,16 @@ export function InsightsView({ metrics }: { metrics: Metric[] }) {
 
 function overlayOption(active: Metric[]): EChartsOption {
   return {
-    grid: { top: 30, right: 50, bottom: 60, left: 50 },
+    grid: { top: 30, right: 50, bottom: 64, left: 50 },
     tooltip: { trigger: 'axis' },
     legend: { top: 0 },
-    xAxis: { type: 'time' },
+    xAxis: { type: 'time', axisLabel: { hideOverlap: true, fontSize: 10 } },
     yAxis: active.map((m, i) => ({
       type: 'value', name: m.unit, position: i % 2 ? 'right' : 'left',
-      offset: Math.floor(i / 2) * 40, scale: true, axisLine: { lineStyle: { color: m.color } },
+      offset: Math.floor(i / 2) * 40, scale: true, splitNumber: 4,
+      axisLine: { lineStyle: { color: m.color } }, axisLabel: { fontSize: 10 },
     })),
-    dataZoom: [{ type: 'inside' }, { type: 'slider', height: 18, bottom: 16 }],
+    dataZoom: [{ type: 'inside' }, { type: 'slider', height: 18, bottom: 18 }],
     series: active.map((m, i) => ({
       type: 'line', name: m.label, yAxisIndex: i, showSymbol: false,
       itemStyle: { color: m.color }, data: m.points.map((p) => [p.t, p.v]),
@@ -71,17 +72,25 @@ function overlayOption(active: Metric[]): EChartsOption {
 
 function stackedOption(active: Metric[]): EChartsOption {
   const rows = active.length;
-  const laneH = 120;
-  const top = 20, gap = 30;
+  const laneH = 110;
+  const top = 30, gap = 40;
   return {
     tooltip: { trigger: 'axis' },
     axisPointer: { link: [{ xAxisIndex: 'all' }] },
-    grid: active.map((_, i) => ({ left: 56, right: 24, top: top + i * (laneH + gap), height: laneH })),
-    xAxis: active.map((_, i) => ({ type: 'time', gridIndex: i, axisLabel: { show: i === rows - 1 } })),
-    yAxis: active.map((m, i) => ({ type: 'value', gridIndex: i, name: `${m.label} (${m.unit})`, scale: true })),
+    grid: active.map((_, i) => ({ left: 52, right: 20, top: top + i * (laneH + gap), height: laneH })),
+    xAxis: active.map((_, i) => ({
+      type: 'time', gridIndex: i,
+      axisLabel: { show: i === rows - 1, hideOverlap: true, fontSize: 10 },
+    })),
+    yAxis: active.map((m, i) => ({
+      type: 'value', gridIndex: i, scale: true, splitNumber: 3,
+      name: `${m.label} (${m.unit})`, nameGap: 8,
+      nameTextStyle: { fontSize: 10, color: '#9aa6ba', align: 'left' },
+      axisLabel: { fontSize: 10 },
+    })),
     dataZoom: [
       { type: 'inside', xAxisIndex: active.map((_, i) => i) },
-      { type: 'slider', xAxisIndex: active.map((_, i) => i), height: 18, bottom: 8 },
+      { type: 'slider', xAxisIndex: active.map((_, i) => i), height: 16, bottom: 8 },
     ],
     series: active.map((m, i) => ({
       type: 'line', name: m.label, xAxisIndex: i, yAxisIndex: i, showSymbol: false,

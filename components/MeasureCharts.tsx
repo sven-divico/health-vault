@@ -8,8 +8,8 @@ function lineOption(name: string, data: Series[], min?: number, max?: number): E
   return {
     grid: { top: 24, right: 16, bottom: 48, left: 44 },
     tooltip: { trigger: 'axis' },
-    xAxis: { type: 'time' },
-    yAxis: { type: 'value', name, min: min ?? 'dataMin', max: max ?? 'dataMax', scale: true },
+    xAxis: { type: 'time', axisLabel: { hideOverlap: true, fontSize: 10 } },
+    yAxis: { type: 'value', name, min: min ?? 'dataMin', max: max ?? 'dataMax', scale: true, axisLabel: { fontSize: 10 } },
     dataZoom: [{ type: 'inside' }, { type: 'slider', height: 18, bottom: 8 }],
     series: [{ type: 'line', name, showSymbol: false, data: data.map((d) => [d.t, d.v]) }],
   };
