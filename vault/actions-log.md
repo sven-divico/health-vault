@@ -4,6 +4,24 @@ Append-only. Newest entries at the top.
 
 ---
 
+## 2026-06-13 — v1 Chunk 2 implemented (app shell / sidebar)
+
+**Action:** Executed Chunk 2 via subagent-driven development (implement + spec/quality
+review). Branch `feature/v1-design-and-vault`.
+
+**Shipped:**
+- `lib/nav.ts` — declarative nav config (8 domain sections, Body group with sub-items).
+- `components/Sidebar.tsx` — recursive, config-driven left sidebar (collapsible groups,
+  active-route highlight, scrollable icon rail).
+- `app/layout.tsx` — replaced top-nav bar with sidebar + scrollable main.
+- `app/settings/page.tsx` + `app/people/page.tsx` stubs (People replaced in Chunk 5).
+
+**Note:** localStorage open/closed persistence intentionally deferred. Build still fails
+only on the known recharts imports in the two chart components → fixed in Chunk 3.
+**Next:** Chunk 3 — ECharts visualization + Insights correlation view.
+
+---
+
 ## 2026-06-13 — v1 Chunk 1 implemented (data foundations)
 
 **Action:** Executed Chunk 1 of the v1 plan via subagent-driven development (implementer +
