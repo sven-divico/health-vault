@@ -22,3 +22,11 @@ test('duration only, no category', () => {
 test('empty input', () => {
   assert.deepEqual(parseActivity('   '), { category: null, durationMin: null, note: null });
 });
+test('does not treat metre distance as minutes', () => {
+  assert.deepEqual(parseActivity('swim 500m'),
+    { category: 'swim', durationMin: null, note: '500m' });
+});
+test('keeps distance token and parses real minutes', () => {
+  assert.deepEqual(parseActivity('swim 500m 30min'),
+    { category: 'swim', durationMin: 30, note: '500m' });
+});

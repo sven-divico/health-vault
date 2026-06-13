@@ -4,7 +4,7 @@ export interface ParsedActivity {
   note: string | null;
 }
 
-const DURATION_RE = /(\d+(?:[.,]\d+)?)\s*(h|hr|hrs|hour|hours|m|min|mins|minute|minutes)\b/i;
+const DURATION_RE = /(\d+(?:[.,]\d+)?)\s*(h|hr|hrs|hour|hours|min|mins|minute|minutes)\b/i;
 
 export function parseActivity(input: string): ParsedActivity {
   const text = input.trim();
