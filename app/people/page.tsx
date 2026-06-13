@@ -11,7 +11,7 @@ export default async function PeoplePage() {
   const unlocked = isAdminCookieValid((await cookies()).get(ADMIN_COOKIE)?.value);
   if (!unlocked) {
     return (
-      <form action={async (fd: FormData) => { await unlockAdmin(fd); }} className="max-w-sm space-y-3">
+      <form action={async (fd: FormData) => { 'use server'; await unlockAdmin(fd); }} className="max-w-sm space-y-3">
         <h1 className="text-2xl font-semibold">People</h1>
         <input name="secret" type="password" placeholder="Admin secret"
           className="w-full rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900" />
@@ -30,7 +30,7 @@ export default async function PeoplePage() {
           </li>
         ))}
       </ul>
-      <form action={async (fd: FormData) => { await createInviteAction(fd); }} className="flex max-w-sm gap-2">
+      <form action={async (fd: FormData) => { 'use server'; await createInviteAction(fd); }} className="flex max-w-sm gap-2">
         <input name="username" placeholder="new username"
           className="flex-1 rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900" />
         <button className="rounded bg-neutral-900 px-4 py-2 text-white dark:bg-neutral-100 dark:text-neutral-900">Invite</button>
