@@ -4,6 +4,30 @@ Append-only. Newest entries at the top.
 
 ---
 
+## 2026-06-13 — Responsive mobile nav + permanent permission fix (deployed)
+
+**Action:** Implemented responsive navigation and made the data-dir permission fix
+permanent; deployed to prod.
+
+**Changes:**
+- `components/AppShell.tsx` (new) — off-canvas drawer pattern: persistent sidebar on `md+`,
+  hamburger-toggled drawer on phones (backdrop, Escape, scroll-lock, close-on-navigate,
+  aria labels). `Sidebar` refactored to fill the drawer + mobile close button;
+  `layout.tsx` renders `<AppShell>`.
+- `setup-server.sh` — now `chown -R 1001:1001 data` so a fresh server setup can't repeat
+  the empty-DB permission issue.
+
+**Verified:** built; visually checked at 375px (drawer) and desktop (persistent sidebar) via
+preview; deployed via `./deploy-to-prod.sh`; prod `/login` 200 with hamburger markup present
+(responsive UI live); container healthy; DB persisted; `measurements.category` intact;
+webhook + bot (@eat_0042_bot) intact.
+
+**Note:** invite `EmYbRxYc8apaWOUh` now shows **consumed = true** → user successfully bound
+their Telegram account via `/start`. (Invites are one-time; a new one is needed only to bind
+another account.)
+
+---
+
 ## 2026-06-13 — Production bot switched to @eat_0042_bot
 
 **Action:** User recreated the bot as **@eat_0042_bot** ("Food and Health Treacker",
