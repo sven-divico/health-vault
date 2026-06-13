@@ -8,6 +8,7 @@ import * as schema from './schema';
 function dbPath(): string {
   const url = process.env.DATABASE_URL ?? 'file:./data/vault.sqlite';
   const path = url.startsWith('file:') ? url.slice('file:'.length) : url;
+  if (path === ':memory:' || path === '') return ':memory:';
   return resolve(path);
 }
 
