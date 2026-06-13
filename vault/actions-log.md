@@ -4,6 +4,34 @@ Append-only. Newest entries at the top.
 
 ---
 
+## 2026-06-13 — Vision token optimization (implemented + deployed)
+
+**Action:** Implemented per spec `docs/superpowers/specs/2026-06-13-vision-token-optimization-design.md`
+and deployed to prod. Photos are now downsampled before the API call, parsed via structured
+outputs, and every call's size/tokens/cost/confidence/latency is logged.
+
+**Shipped:**
+- Downsample with **`jpeg-js`** (zero-dep pure JS) — box-filter resize to `VISION_MAX_EDGE`
+  (default 768px), `VISION_JPEG_QUALITY` (80), env-tunable; original still saved full-res.
+- **Structured outputs** (`output_config.format` json_schema) replace the regex parse;
+  upgraded `@anthropic-ai/sdk` 0.40 → 0.104.
+- Usage capture + Haiku 4.5 cost (`costMicroUsd = input*1 + output*5`), new `vision_usage`
+  table (migration 0002), bot reply usage line (`VISION_SHOW_USAGE`).
+- Tests: `cost.test.ts` (3), `downsample.test.ts` (2, against a seed JPEG). All 16 pass.
+
+**Packaging gotcha (resolved):** Turbopack standalone didn't reliably bundle/trace the image
+lib. `jimp` was rejected (its `@jimp/*` metapackage traces only partially → would crash).
+Chose **`jpeg-js` (zero deps)** + the proven `better-sqlite3` pattern: `serverExternalPackages`
++ one Dockerfile `COPY`. Verified in the live container: `require('jpeg-js')` → OK.
+
+**Prod verify:** `/login` 200; container loads jpeg-js; `vision_usage` (14 cols) created via
+clean migration; no errors. End-to-end (real photo) pending user test.
+
+**Tunables (optional env, code defaults):** `VISION_MAX_EDGE`, `VISION_JPEG_QUALITY`,
+`VISION_SHOW_USAGE`, `VISION_MODEL`.
+
+---
+
 ## 2026-06-13 — Chart axis-label polish (deployed)
 
 **Action:** Decluttered ECharts axis labels on narrow screens — `hideOverlap` + smaller
