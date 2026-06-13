@@ -8,6 +8,13 @@
       "when": 1779605968131,
       "tag": "0000_tricky_maverick",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1781355627557,
+      "tag": "0001_lazy_solo",
+      "breakpoints": true
     }
   ]
 }
